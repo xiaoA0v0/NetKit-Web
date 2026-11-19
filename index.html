@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NetKit Web — 极客网络 · 硬件 · 系统在线工具台 | xiaoA0v0</title>
+  <meta name="description" content="纯前端零依赖的极客网络、硬件与系统实用工具台：IPv4/CIDR 子网位图计算与拆分、宽带/硬盘容量换算、常用端口速查、PC 装机电源功率估算与运维命令生成器。" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow glow-1" aria-hidden="true"></div>
+  <div class="bg-glow glow-2" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <span class="brand-logo" aria-hidden="true">⚡</span>
+        <div>
+          <h1 class="brand-title">NetKit <span class="accent">Web</span></h1>
+          <p class="brand-sub">极客网络 · 硬件 · 系统在线工具台</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a class="pill-link" href="https://fanzhengwei.cn" target="_blank" rel="noopener">🌐 fanzhengwei.cn</a>
+        <a class="pill-link primary" href="https://github.com/xiaoA0v0/NetKit-Web" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabbar-wrap">
+    <div class="container">
+      <div class="tabbar" role="tablist" aria-label="工具模块切换">
+        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="subnet">🌐 CIDR 子网计算</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="bandwidth">⚡ 宽带与存储换算</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="ports">🔌 常用端口速查</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="psu">🖥️ 装机电源估算</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="cmd">⌨️ 运维命令生成</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container main-content">
+    <!-- ==================== 1. CIDR 子网计算器 ==================== -->
+    <section id="panel-subnet" class="panel active" role="tabpanel">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>IPv4 / CIDR 子网可视化计算与拆分器</h2>
+            <p class="muted">输入任意 IP 地址与前缀长度，实时解析网络段、可用主机范围、32 位二进制掩码并支持一键等分子网。</p>
+          </div>
+          <div class="quick-chips">
+            <button class="chip" data-cidr="192.168.1.10/24">家用 /24</button>
+            <button class="chip" data-cidr="10.10.20.5/22">企业内网 /22</button>
+            <button class="chip" data-cidr="172.16.0.1/16">Docker /16</button>
+            <button class="chip" data-cidr="192.168.100.5/30">点对点 /30</button>
+          </div>
+        </div>
+
+        <div class="form-grid subnet-inputs">
+          <div class="field">
+            <label for="cidr-ip">IPv4 地址（支持直接粘贴 IP/掩码）</label>
+            <input id="cidr-ip" type="text" value="192.168.1.10" placeholder="例如 192.168.1.10 或 10.0.0.1/22" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="cidr-prefix">CIDR 前缀长度: <strong id="cidr-prefix-val">/24</strong></label>
+            <input id="cidr-prefix" type="range" min="1" max="32" value="24" />
+          </div>
+          <div class="field">
+            <label for="cidr-split">子网等分拆分</label>
+            <select id="cidr-split">
+              <option value="1">不拆分（仅显示当前网段）</option>
+              <option value="2">拆分为 2 个子网 (+1 bit)</option>
+              <option value="4">拆分为 4 个子网 (+2 bits)</option>
+              <option value="8">拆分为 8 个子网 (+3 bits)</option>
+              <option value="16">拆分为 16 个子网 (+4 bits)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="subnet-error" class="alert-error hidden"></div>
+
+        <div class="stat-grid" id="subnet-stats"></div>
+
+        <div class="binary-box">
+          <div class="binary-header">
+            <span>32 位二进制网络位 / 主机位可视化</span>
+            <div class="legend">
+              <span><i class="dot net"></i>网络位 (Network)</span>
+              <span><i class="dot host"></i>主机位 (Host)</span>
+            </div>
+          </div>
+          <div id="subnet-binary" class="binary-bits"></div>
+        </div>
+
+        <div id="subnet-split-wrap" class="split-wrap hidden">
+          <div class="sub-head">
+            <h3>子网划分明细表</h3>
+            <button class="btn-ghost" id="btn-copy-subnets">📋 复制全部子网表</button>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>子网 CIDR</th>
+                  <th>网络地址</th>
+                  <th>可用主机范围</th>
+                  <th>广播地址</th>
+                  <th>可用主机数</th>
+                </tr>
+              </thead>
+              <tbody id="subnet-split-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. 宽带与存储换算 ==================== -->
+    <section id="panel-bandwidth" class="panel" role="tabpanel">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>宽带速率与下载耗时计算</h2>
+              <p class="muted">区分运营商带宽（Mbps / bit）与实际软件下载速度（MB/s / Byte，1 MB/s = 8 Mbps）。</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="bw-mbps">宽带签约带宽 (Mbps)</label>
+              <input id="bw-mbps" type="number" min="1" step="10" value="1000" />
+            </div>
+            <div class="field">
+              <label for="bw-filesize">待下载文件大小 (GB)</label>
+              <input id="bw-filesize" type="number" min="0.1" step="5" value="80" />
+            </div>
+          </div>
+          <div class="quick-chips" style="margin-top: 12px;">
+            <button class="chip bw-preset" data-mbps="100">100M 宽带</button>
+            <button class="chip bw-preset" data-mbps="300">300M 宽带</button>
+            <button class="chip bw-preset" data-mbps="500">500M 宽带</button>
+            <button class="chip bw-preset" data-mbps="1000">千兆 1000M</button>
+            <button class="chip bw-preset" data-mbps="2500">2.5G 内网</button>
+            <button class="chip bw-preset" data-mbps="10000">万兆 10G</button>
+          </div>
+          <div class="stat-grid compact" id="bw-results" style="margin-top: 18px;"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>硬盘标称容量 vs Windows 实际显示</h2>
+              <p class="muted">厂商按 1000 进制（TB/GB）标称，Windows 按 1024 进制（TiB/GiB）计算并显示为 TB/GB。</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="disk-size">硬盘标称容量</label>
+              <input id="disk-size" type="number" min="1" step="1" value="2" />
+            </div>
+            <div class="field">
+              <label for="disk-unit">标称单位</label>
+              <select id="disk-unit">
+                <option value="GB">GB (如 256GB / 500GB / 512GB)</option>
+                <option value="TB" selected>TB (如 1TB / 2TB / 4TB / 16TB)</option>
+              </select>
+            </div>
+          </div>
+          <div class="quick-chips" style="margin-top: 12px;">
+            <button class="chip disk-preset" data-size="250" data-unit="GB">250GB</button>
+            <button class="chip disk-preset" data-size="512" data-unit="GB">512GB</button>
+            <button class="chip disk-preset" data-size="1" data-unit="TB">1TB</button>
+            <button class="chip disk-preset" data-size="2" data-unit="TB">2TB</button>
+            <button class="chip disk-preset" data-size="4" data-unit="TB">4TB</button>
+            <button class="chip disk-preset" data-size="16" data-unit="TB">16TB</button>
+          </div>
+          <div class="stat-grid compact" id="disk-results" style="margin-top: 18px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 3. 常用网络端口速查 ==================== -->
+    <section id="panel-ports" class="panel" role="tabpanel">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>常用网络端口与协议速查库</h2>
+            <p class="muted">支持按端口号、服务名称、协议类型或用途关键词实时过滤（涵盖系统运维、数据库、内网穿透、游戏与常见高危端口）。</p>
+          </div>
+        </div>
+
+        <div class="port-toolbar">
+          <input id="port-search" type="search" placeholder="🔍 搜索端口号或服务名，如 3389、1688、SSH、WireGuard、MySQL..." />
+          <div class="quick-chips" id="port-filters">
+            <button class="chip active" data-cat="all">全部</button>
+            <button class="chip" data-cat="web">Web / 代理</button>
+            <button class="chip" data-cat="sys">系统 / 远程</button>
+            <button class="chip" data-cat="db">数据库 / 缓存</button>
+            <button class="chip" data-cat="net">组网 / 基础设施</button>
+            <button class="chip" data-cat="danger">⚠️ 高危注意</button>
+          </div>
+        </div>
+
+        <div class="table-scroll" style="margin-top: 14px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>端口</th>
+                <th>协议</th>
+                <th>服务名称</th>
+                <th>分类</th>
+                <th>说明与安全建议</th>
+              </tr>
+            </thead>
+            <tbody id="ports-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. 装机电源功率估算器 ==================== -->
+    <section id="panel-psu" class="panel" role="tabpanel">
+      <div class="two-col psu-layout">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>PC 装机整机功耗与电源瓦数估算</h2>
+              <p class="muted">综合考虑 CPU 满载睿频功耗、显卡瞬时峰值（ATX 3.0/3.1 余量）与外设负载，推荐最佳 80Plus 效率区间电源。</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="psu-cpu">处理器 (CPU) 功耗档位</label>
+              <select id="psu-cpu">
+                <option value="65">入门 / 低功耗 / E3-L / R5 5600 / i5-12400 (~65W)</option>
+                <option value="125" selected>主流中端 / i5-13600K / i5-14600K / R7 7800X3D (~125W)</option>
+                <option value="180">高端游戏 / R9 7950X / R7 9800X3D / Ultra 7 (~180W)</option>
+                <option value="253">旗舰满血 / i7-14700K / i9-14900K (~253W)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="psu-gpu">显卡 (GPU) 型号档位</label>
+              <select id="psu-gpu">
+                <option value="0">核显 / 亮机卡 (0W 独立供电)</option>
+                <option value="115">RTX 4060 / RX 6600 (~115W)</option>
+                <option value="165">RTX 4060 Ti / RTX 3060 (~165W)</option>
+                <option value="220" selected>RTX 4070 / RTX 4070 SUPER / RX 7800 XT (~220W)</option>
+                <option value="285">RTX 4070 Ti SUPER / RTX 5070 Ti / RX 7900 XT (~285W)</option>
+                <option value="320">RTX 4080 SUPER / RTX 5080 / RX 7900 XTX (~320W)</option>
+                <option value="450">RTX 4090 (~450W)</option>
+                <option value="575">RTX 5090 (~575W)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="psu-ram">内存条数量: <strong id="psu-ram-val">2 根</strong></label>
+              <input id="psu-ram" type="range" min="1" max="8" value="2" />
+            </div>
+
+            <div class="field">
+              <label for="psu-ssd">NVMe / SATA 固态硬盘数量: <strong id="psu-ssd-val">2 块</strong></label>
+              <input id="psu-ssd" type="range" min="0" max="8" value="2" />
+            </div>
+
+            <div class="field">
+              <label for="psu-hdd">3.5 寸机械硬盘 (HDD) 数量: <strong id="psu-hdd-val">1 块</strong></label>
+              <input id="psu-hdd" type="range" min="0" max="12" value="1" />
+            </div>
+
+            <div class="field">
+              <label for="psu-cool">散热器与机箱风扇方案</label>
+              <select id="psu-cool">
+                <option value="15">风冷散热 + 2~3 把机箱风扇 (~15W)</option>
+                <option value="35" selected>240/360 一体式水冷 + 4~6 把 RGB 风扇 (~35W)</option>
+                <option value="65">分体水冷水泵 + 满载 9 把风扇 (~65W)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card psu-result-card">
+          <div class="card-head">
+            <div>
+              <h2>电源选购建议</h2>
+              <p class="muted">基于 50% ~ 75% 黄金转化率区间自动计算</p>
+            </div>
+          </div>
+
+          <div class="psu-hero">
+            <div class="psu-hero-label">推荐额定功率 (Recommended PSU)</div>
+            <div class="psu-hero-watt" id="psu-rec-watt">750W</div>
+            <div class="psu-hero-badge" id="psu-atx-tip">建议选择 80Plus 金牌 / ATX 3.0 认证电源</div>
+          </div>
+
+          <div class="meter-wrap">
+            <div class="meter-label">
+              <span>满载估算总功耗：<strong id="psu-total-watt">420W</strong></span>
+              <span id="psu-load-pct">负载率 56%</span>
+            </div>
+            <div class="meter-track">
+              <div class="meter-fill" id="psu-meter-fill" style="width: 56%;"></div>
+            </div>
+          </div>
+
+          <div class="psu-breakdown" id="psu-breakdown"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 5. 运维命令生成器 ==================== -->
+    <section id="panel-cmd" class="panel" role="tabpanel">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>Windows / Linux 网络与系统排障命令生成器</h2>
+            <p class="muted">输入目标主机、端口或 SSH 隧道参数，自动生成可直接复制粘贴到终端执行的命令。</p>
+          </div>
+        </div>
+
+        <div class="form-grid cmd-inputs">
+          <div class="field">
+            <label for="cmd-host">目标主机 / IP / 域名</label>
+            <input id="cmd-host" type="text" value="github.com" />
+          </div>
+          <div class="field">
+            <label for="cmd-port">目标端口</label>
+            <input id="cmd-port" type="number" value="443" min="1" max="65535" />
+          </div>
+          <div class="field">
+            <label for="cmd-local-port">本地映射端口 (SSH 隧道)</label>
+            <input id="cmd-local-port" type="number" value="8080" min="1" max="65535" />
+          </div>
+          <div class="field">
+            <label for="cmd-ssh-user">SSH 用户名@跳板机</label>
+            <input id="cmd-ssh-user" type="text" value="root@192.168.1.2" />
+          </div>
+        </div>
+
+        <div class="cmd-list" id="cmd-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span>Built with ❤️ by <a href="https://github.com/xiaoA0v0" target="_blank" rel="noopener">xiaoA0v0 (fanzhenwei)</a> · 纯前端本地计算，不上传任何隐私数据</span>
+      <span class="muted">🌐 网络 · 🖥️ 硬件 · ⚡ 系统 · 🏍️ 摩托</span>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
